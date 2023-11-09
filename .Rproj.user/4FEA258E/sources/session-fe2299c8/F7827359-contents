@@ -1,0 +1,67 @@
+library(tidyverse)
+
+# Read in the data
+sat_data = read_csv('SAT.csv')
+
+# Compare reading scores for Texas and Maryland
+texas_mayland_reading = sat_data %>%
+  filter(state != 'Minnesota') %>%
+  select(state, reading)
+
+# Run the t-test
+t.test(texas_mayland_reading$reading ~ texas_mayland_reading$state)
+
+# By default, R runs Welch's t
+# TO run Student's t, add the var.equal = T argument to t.test()
+t.test(texas_mayland_reading$reading ~ texas_mayland_reading$state,
+       var.equal = T)
+
+
+# Compare math scores for Texas and Maryland
+texas_mayland_math = sat_data %>%
+  filter(state != 'Minnesota') %>%
+  select(state, math)
+
+# Run the t-test
+t.test(texas_mayland_math$math ~ texas_mayland_math$state)
+
+# By default, R runs Welch's t
+# TO run Student's t, add the var.equal = T argument to t.test()
+t.test(texas_mayland_math$math ~ texas_mayland_math$state,
+       var.equal = T)
+
+# Dependent samples t-test comparing math and reading
+
+# Add a new variable to sat_data called "difference"
+# Which will be a persons math score minus reading score
+sat_data = sat_data %>%
+  mutate(difference = math - reading)
+
+# One-sample t-test on the difference variable
+t.test(sat_data$difference)
+
+#Use the paired = TRUE argument
+t.test(sat_data$reading, sat_data$math, paired = TRUE)
+
+#Add an ID column to sat_Data before pivoting
+sat_data$id = seq(1, 150)
+
+#Pivot data from wide to long
+sat_data_long = sat_data %>%
+  pivot_longer(values_to = 'score', names_to = 'test', 
+               cols = c(math, reading))
+
+
+
+#Spaghetti plot
+ggplot(sat_data_long, aes(x = test, y = score, group = id)) +
+  geom_point() +
+  geom_line(alpha = .5) +
+  theme_classic()
+
+#Jitter the points and lines
+ggplot(sat_data_long, aes(x = test, y = score, group = id)) +
+  geom_point(position = position_dodge(width = .2)) +
+  geom_line(alpha = .5, position = position_dodge(width = .2)) +
+  theme_classic()
+
